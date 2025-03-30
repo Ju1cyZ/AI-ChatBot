@@ -4,8 +4,6 @@
 
 https://hub.docker.com/r/ollama/ollama
 
---
-
 ## Docker run Command for Ollama
 
 ### Only CPU
