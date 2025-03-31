@@ -1,7 +1,7 @@
 import { newChat } from "../Utils/Fonction.js";
-import { API_URL } from "./Const.js";
+import { API_URL, API_URL_MODEL } from "./Const.js";
 
-const model = "llama3";
+let Model;
 let windowCount = 0;
 export let History = [];
 
@@ -31,7 +31,7 @@ async function chatWithAi(input) {
     })
 
     const bodyData = {
-        model: model,
+        model: Model,
         messages: History,
         stream: false
     }
@@ -131,7 +131,7 @@ export async function fetchStreamingResponse(input, windowsDiv) {
     })
 
     const bodyData = {
-        model: model,
+        model: Model,
         messages: History[currentChatIndex].History,
         stream: true
     }
@@ -188,6 +188,23 @@ export async function fetchStreamingResponse(input, windowsDiv) {
 
 }
 
+export async function loadModel() {
+    const modelList = document.querySelector("#chatModel")
+    const resp = await fetch(API_URL_MODEL);
+    const json = await resp.json();
+
+    modelList.innerHTML = "";
+    for (const element of json.models) {
+        modelList.innerHTML += `<li><a data-model="${element.name}" >${element.name.split(':')[0]} - ${element.name.split(':')[1]}</a></li>`
+    }
+
+    setModel(json.models[0].name);
+}
+
+export function setModel(model) {
+    document.querySelector("#title").textContent = `${model.split(':')[0]} - Chat`
+    Model = model;
+}
 
 function loadWindows() {
     const windowsDiv = document.querySelector("#windows")
