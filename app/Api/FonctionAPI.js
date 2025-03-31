@@ -1,18 +1,31 @@
-import { API_URL } from "./Const.mjs";
+import { newChat } from "../Utils/Fonction.js";
+import { API_URL } from "./Const.js";
 
 const model = "llama3";
 let windowCount = 0;
-let History = [];
+export let History = [];
+
+let currentChatIndex = 0;
 
 if (localStorage.getItem("History") !== null) {
     History = JSON.parse(localStorage.getItem("History"));
+    if (History.length - 1 >= currentChatIndex) {
+        loadWindows();
+    }
+}
+else {
+    newChat();
+}
+
+export function setChatIndex(chatHash) {
+    currentChatIndex = History.findIndex(chat => chat.chatHash === chatHash)
+    console.log(chatHash)
     loadWindows();
 }
 
-
 async function chatWithAi(input) {
 
-    History.push({
+    History[currentChatIndex].History.push({
         role: "user",
         content: input
     })
@@ -33,7 +46,7 @@ async function chatWithAi(input) {
     const resp = await fetch(API_URL, options);
     const data = await resp.json();
 
-    History.push({
+    History[currentChatIndex].History.push({
         role: "assistant",
         content: data.message.content,
     })
@@ -112,14 +125,14 @@ export async function fetchStreamingResponse(input, windowsDiv) {
 
     windowsDiv.innerHTML += html;
 
-    History.push({
+    History[currentChatIndex].History.push({
         role: "user",
         content: input
     })
 
     const bodyData = {
         model: model,
-        messages: History,
+        messages: History[currentChatIndex].History,
         stream: true
     }
 
@@ -132,6 +145,7 @@ export async function fetchStreamingResponse(input, windowsDiv) {
 
     try {
         const response = await fetch(API_URL, options); // Remplace par l'URL de ton API
+        console.log(options)
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -154,7 +168,7 @@ export async function fetchStreamingResponse(input, windowsDiv) {
             });
         }
 
-        History.push({
+        History[currentChatIndex].History.push({
             role: "assistant",
             content: output.textContent,
         })
@@ -177,8 +191,9 @@ export async function fetchStreamingResponse(input, windowsDiv) {
 
 function loadWindows() {
     const windowsDiv = document.querySelector("#windows")
+    windowsDiv.innerHTML = "";
 
-    History.forEach((item) => {
+    History[currentChatIndex].History.forEach((item) => {
         if (item.role === "assistant") {
             windowCount++;
             windowsDiv.innerHTML += `
